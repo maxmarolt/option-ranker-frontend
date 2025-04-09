@@ -93,15 +93,13 @@ export default function BestOptionCalculator() {
 
     setIsLoading(true);
     try {
-      const API_BASE = Platform.OS === 'web'
-        ? 'http://192.168.178.197:8000'
-        : 'http://localhost:8000';
+        const API_BASE = "https://option-ranker-backend-production.up.railway.app";
 
-      const response = await fetch(`${API_BASE}/predict-options`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody),
-      });
+        const response = await fetch(`${API_BASE}/predict-options`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody),
+          });
 
       const result = await response.json();
 
