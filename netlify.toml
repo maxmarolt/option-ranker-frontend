@@ -1,7 +1,11 @@
 [build]
-command = "cd frontend && yarn build"
+base = "frontend"
+command = "yarn build"
 publish = "frontend/dist"
 
 [build.environment]
 NODE_VERSION = "18"
 EXPO_CLI_VERSION = "6.3.1"
+
+[build.cache]
+  paths = ["frontend/node_modules"]
