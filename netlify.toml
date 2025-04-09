@@ -1,5 +1,5 @@
 [build]
-command = "npm install --legacy-peer-deps && npm run build"
+command = "yarn build"
 publish = "web-build"
 
 [build.environment]
