@@ -44,6 +44,7 @@ export default function BestOptionCalculator() {
   const [showPicker, setShowPicker] = useState(false);
   const [bestOptions, setBestOptions] = useState<any[]>([]);
   const [noProfitableOptions, setNoProfitableOptions] = useState(false);
+  const [marketClosedOrNoData, setMarketClosedOrNoData] = useState(false);
   const [useAskPrice, setUseAskPrice] = useState(true);
   const [animValue] = useState(new Animated.Value(1));
   const [isLoading, setIsLoading] = useState(false);
@@ -92,6 +93,8 @@ export default function BestOptionCalculator() {
     };
 
     setIsLoading(true);
+    setMarketClosedOrNoData(false);
+
     try {
         const API_BASE = "https://option-ranker-backend-production.up.railway.app";
 
@@ -102,6 +105,13 @@ export default function BestOptionCalculator() {
           });
 
       const result = await response.json();
+
+      if (result.market_closed_or_no_data) {
+        setMarketClosedOrNoData(true);
+        setNoProfitableOptions(false);
+        setBestOptions([]);
+        return;
+      }
 
       if (result.message) {
         Alert.alert("Notice", result.message);
@@ -254,7 +264,18 @@ export default function BestOptionCalculator() {
             contentContainerStyle={[styles.resultScrollContent, !isWideScreen && { paddingLeft: 0, alignItems: 'center' }]}
             showsVerticalScrollIndicator={false}
           >
-            {noProfitableOptions && (
+            {marketClosedOrNoData && (
+            <Card style={styles.warningBox}>
+                <Card.Content style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <MaterialIcons name="schedule" size={24} color="#ffaa00" style={{ marginRight: 8 }} />
+                <Text style={{ color: '#ffaa00', fontSize: 16 }}>
+                    Options data not available. Market may be closed or Yahoo is not reporting current prices.
+                </Text>
+                </Card.Content>
+            </Card>
+            )}
+
+            {!marketClosedOrNoData && noProfitableOptions && (
               <Card style={styles.warningBox}>
                 <Card.Content style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <MaterialIcons name="warning" size={24} color="#ffaa00" style={{ marginRight: 8 }} />
