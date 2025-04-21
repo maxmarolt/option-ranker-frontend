@@ -30,7 +30,7 @@ export default function HomeScreen({ navigation }: Props) {
         style={styles.button}
         textColor="#00ff88"
       >
-        📈 Use Calculator
+        Use Calculator
       </Button>
 
       <Button
@@ -39,7 +39,7 @@ export default function HomeScreen({ navigation }: Props) {
         style={styles.button}
         textColor="#00ff88"
       >
-        🔬 Launch Advanced Tools
+        Launch Advanced Tools
       </Button>
     </ScrollView>
   );

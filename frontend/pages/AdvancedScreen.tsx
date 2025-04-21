@@ -22,12 +22,12 @@ export default function AdvancedScreen({ navigation }: Props) {
       {/* Back nav */}
       <Button
         mode="text"
-        onPress={() => navigation.navigate('Calculator')}
+        onPress={() => navigation.goBack()}
         style={{ alignSelf: 'flex-start', marginBottom: 10 }}
         textColor="#00ff88"
-      >
-        ← Back to Calculator
-      </Button>
+        >
+        ← Back
+        </Button>
 
       {/* Ticker input */}
       <TextInput
@@ -39,17 +39,24 @@ export default function AdvancedScreen({ navigation }: Props) {
         }}
         placeholder="e.g. AAPL"
         mode="outlined"
-        style={styles.input}
-        autoCapitalize="characters"
-        textColor="#00ff88" // ✅ force visible green text
+        style={{
+            marginBottom: 20,
+            borderRadius: 12,
+            backgroundColor: '#000',
+        }}
         theme={{
             colors: {
             primary: '#00ff88',
+            text: '#00ff88',
             placeholder: '#888',
-            background: 'black',
+            background: '#000',
+            surfaceVariant: '#000',
+            outline: '#00ff88', // outline color when inactive
             },
         }}
+        textColor="#00ff88"
         />
+
 
 
       {/* Chart selection */}
@@ -60,7 +67,7 @@ export default function AdvancedScreen({ navigation }: Props) {
         style={styles.chartButton}
         textColor="#00ff88"
       >
-        📊 Show Volatility Surface
+        Show Volatility Surface
       </Button>
 
       {/* Chart area */}

@@ -22,6 +22,9 @@ import {
   DefaultTheme,
 } from 'react-native-paper';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { SafeAreaView, StatusBar } from 'react-native';
+import { IconButton } from 'react-native-paper';
+
 
 type RootStackParamList = {
   Calculator: undefined;
@@ -139,7 +142,23 @@ export default function CalculatorScreen({ navigation }: Props) {
 
   return (
     <PaperProvider theme={theme}>
-      <ScrollView style={{ flex: 1, backgroundColor: '#000' }} contentContainerStyle={{ flexGrow: 1 }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#000' }}>
+        <StatusBar barStyle="light-content" backgroundColor="#000" />
+  
+        <ScrollView style={{ flex: 1, backgroundColor: '#000' }} contentContainerStyle={{ flexGrow: 1 }}>
+        <View style={{ paddingLeft: 8, paddingTop: 8 }}>
+            <Button
+                mode="text"
+                onPress={() => navigation.goBack()}
+                textColor="#00ff88"
+                labelStyle={{ fontSize: 16 }}
+                icon="arrow-left"
+                contentStyle={{ flexDirection: 'row-reverse' }} // arrow on left
+            >
+                Back
+            </Button>
+            </View>
+
         <View style={[styles.splitContainer, { flexDirection: isWideScreen ? 'row' : 'column' }]}>
         <View style={[styles.inputSection, !isWideScreen && { marginLeft: 0, alignSelf: 'center' }]}>
             <TextInput
@@ -307,6 +326,7 @@ export default function CalculatorScreen({ navigation }: Props) {
           </ScrollView>
         </View>
       </ScrollView>
+      </SafeAreaView>
     </PaperProvider>
   );
 }
