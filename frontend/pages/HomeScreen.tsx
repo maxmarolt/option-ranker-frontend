@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Text, Button } from 'react-native-paper';
+import { ScrollView, View, StyleSheet, Image, Dimensions } from 'react-native';
+import { Button } from 'react-native-paper';
 import { StackNavigationProp } from '@react-navigation/stack';
 
 type RootStackParamList = {
@@ -15,8 +15,14 @@ type Props = {
 
 export default function HomeScreen({ navigation }: Props) {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>🚀 Icarus Options</Text>
+    <ScrollView contentContainerStyle={styles.scrollContent} style={styles.container}>
+      <Image
+        source={require('../assets/images/Logo2_text.png')}
+        style={styles.logo}
+        resizeMode="contain"
+      />
+
+      <View style={{ height: 20 }} />
 
       <Button
         mode="outlined"
@@ -35,7 +41,7 @@ export default function HomeScreen({ navigation }: Props) {
       >
         🔬 Launch Advanced Tools
       </Button>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -43,15 +49,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'black',
+  },
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 40,
+    paddingVertical: 0,
+    paddingHorizontal: 20,
   },
-  title: {
-    fontSize: 26,
-    color: '#00ff88',
-    fontWeight: 'bold',
-    marginBottom: 40,
+  logo: {
+    width: '100%',
+    maxWidth: 300,
+    height: 400,
+    aspectRatio: 3.5,
   },
   button: {
     marginVertical: 10,
