@@ -106,11 +106,8 @@ export default function CalculatorScreen({ navigation }: Props) {
     setIsLoading(true);
     setMarketClosedOrNoData(false);
     try {
-        const BASE_URL = process.env.NODE_ENV === "development"
-            ? "http://127.0.0.1:8000"
-            : "https://option-ranker-backend-production.up.railway.app";
+        const response = await fetch(`https://option-ranker-backend-production.up.railway.app/predict-options?mode=${mode}`, {
 
-            const response = await fetch(`${BASE_URL}/predict-options?mode=${mode}`, {
 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
