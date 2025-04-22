@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, Dimensions, ActivityIndicator, Text } from 'react-native';
 import { WebView } from 'react-native-webview';
+import { Platform } from 'react-native';
 
-const API_BASE = 'https://option-ranker-backend-production.up.railway.app';
+
+const API_BASE = __DEV__ ? 'http://localhost:8000' : 'https://option-ranker-backend-production.up.railway.app';
+
 
 type Props = {
   ticker: string;
@@ -87,8 +90,7 @@ export default function VolSurfaceChart({ ticker }: Props) {
                 eye: { x: 1.0, y: 2.0, z: 0.8 },
                 center: { x: 0.05, y: 0, z: 0 }
               },
-              aspectmode: 'manual',
-              aspectratio: { x: 0.5, y: 0.5, z: 1.5 },
+              aspectmode: 'auto',
               dragmode: 'turntable',
             }
           };
@@ -107,6 +109,17 @@ export default function VolSurfaceChart({ ticker }: Props) {
         <Text style={styles.warning}>
           ⚠️ No volatility data available. The market may be closed or Yahoo returned no data.
         </Text>
+      ) : Platform.OS === 'web' ? (
+        <iframe
+          srcDoc={html(plotData)}
+          style={{
+            width: '100%',
+            height: '100%',
+            border: 'none',
+            backgroundColor: 'black',
+          }}
+          title="IV Surface"
+        />
       ) : (
         <WebView
           originWhitelist={['*']}
@@ -118,7 +131,7 @@ export default function VolSurfaceChart({ ticker }: Props) {
         />
       )}
     </View>
-  );
+  );  
 }
 
 const styles = StyleSheet.create({

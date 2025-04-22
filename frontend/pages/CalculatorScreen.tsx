@@ -24,6 +24,8 @@ import {
 import { StackNavigationProp } from '@react-navigation/stack';
 import { SafeAreaView, StatusBar } from 'react-native';
 import { IconButton } from 'react-native-paper';
+import { TouchableOpacity } from 'react-native';
+
 
 
 type RootStackParamList = {
@@ -60,6 +62,9 @@ export default function CalculatorScreen({ navigation }: Props) {
   const [animValue] = useState(new Animated.Value(1));
   const [isLoading, setIsLoading] = useState(false);
   const [disclaimerChecked, setDisclaimerChecked] = useState(false);
+  const [mode, setMode] = useState<'roi' | 'profit'>('roi');
+  const [customWarningMessage, setCustomWarningMessage] = useState<string | null>(null);
+  const [currentPrice, setCurrentPrice] = useState<number | null>(null);
   const { width } = useWindowDimensions();
   const isWideScreen = Platform.OS === 'web' && width > 768;
 
@@ -101,7 +106,12 @@ export default function CalculatorScreen({ navigation }: Props) {
     setIsLoading(true);
     setMarketClosedOrNoData(false);
     try {
-      const response = await fetch(`https://option-ranker-backend-production.up.railway.app/predict-options`, {
+        const BASE_URL = process.env.NODE_ENV === "development"
+            ? "http://127.0.0.1:8000"
+            : "https://option-ranker-backend-production.up.railway.app";
+
+            const response = await fetch(`${BASE_URL}/predict-options?mode=${mode}`, {
+
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody),
@@ -113,14 +123,22 @@ export default function CalculatorScreen({ navigation }: Props) {
         setBestOptions([]);
         return;
       }
-      if (result.message) {
-        Alert.alert("Notice", result.message);
+      
+      if (result.no_profitable_options) {
+        setNoProfitableOptions(true);
         setBestOptions([]);
-        setNoProfitableOptions(false);
+        setCustomWarningMessage(result.message || null);
       } else {
-        setNoProfitableOptions(!!result.no_profitable_options);
+        setNoProfitableOptions(false);
         setBestOptions(result.results || []);
+        setCustomWarningMessage(null);
+      }      
+      
+      // Show IV warning if applicable
+      if (result.iv_warning && result.iv_message) {
+        Alert.alert("Volatility Warning", result.iv_message);
       }
+      
     } catch (err) {
       console.error('Error fetching predictions:', err);
       Alert.alert("Network Error", "Failed to get predictions from backend.");
@@ -128,6 +146,22 @@ export default function CalculatorScreen({ navigation }: Props) {
       setIsLoading(false);
     }
   };
+
+  const fetchCurrentPrice = async (symbol: string) => {
+    try {
+      const response = await fetch(`http://localhost:8000/current-price?ticker=${symbol}`);
+      const json = await response.json();
+      if (json?.price) {
+        setCurrentPrice(json.price);
+      } else {
+        setCurrentPrice(null);
+      }
+    } catch (err) {
+      console.error("Error fetching price from backend:", err);
+      setCurrentPrice(null);
+    }
+  };
+  
 
   const renderBadges = (badges: any[]) => (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 10 }}>
@@ -161,20 +195,75 @@ export default function CalculatorScreen({ navigation }: Props) {
 
         <View style={[styles.splitContainer, { flexDirection: isWideScreen ? 'row' : 'column' }]}>
         <View style={[styles.inputSection, !isWideScreen && { marginLeft: 0, alignSelf: 'center' }]}>
+                <View
+        style={{
+            flexDirection: isWideScreen ? 'row' : 'column',
+            alignItems: isWideScreen ? 'center' : 'flex-start',
+            marginBottom: 20,
+        }}
+        >
+        <View
+            style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginBottom: 20,
+            }}
+            >
             <TextInput
                 label="Stock Ticker"
                 value={ticker}
-                onChangeText={setTicker}
+                onChangeText={(val) => {
+                setTicker(val);
+                setCurrentPrice(null);
+                }}
                 placeholder="e.g. NVDA"
                 mode="outlined"
-                style={styles.input}
+                style={[
+                styles.input,
+                {
+                    flex: 1,
+                    marginRight: 10,
+                    marginBottom: 3, // eliminate gap
+                },
+                ]}
                 autoCapitalize="characters"
                 theme={{ colors: theme.colors }}
                 contentStyle={{ color: '#00ff88' }}
             />
 
+            <TouchableOpacity
+                onPress={() => {
+                if (ticker.trim() !== '') {
+                    fetchCurrentPrice(ticker.toUpperCase());
+                } else {
+                    Alert.alert('Ticker Missing', 'Please enter a stock ticker first.');
+                }
+                }}
+                style={{
+                height: 51,
+                paddingHorizontal: 12,
+                borderColor: '#00ff88',
+                borderWidth: 1,
+                borderRadius: 4,
+                justifyContent: 'center',
+                alignItems: 'center',
+                }}
+            >
+                <Text style={{ color: '#00ff88', fontSize: 14 }}>
+                {currentPrice !== null
+                    ? `Price ($): $${currentPrice.toFixed(2)}`
+                    : 'Get Price'}
+                </Text>
+            </TouchableOpacity>
+            </View>
+
+
+        
+        </View>
+
+
             <TextInput
-                label="Your Investment Budget (€)"
+                label="Your Investment Budget ($)"
                 value={budget}
                 onChangeText={setBudget}
                 placeholder="e.g. 1000"
@@ -186,7 +275,7 @@ export default function CalculatorScreen({ navigation }: Props) {
             />
 
             <TextInput
-                label="Target Stock Price (€)"
+                label="Target Stock Price ($)"
                 value={targetPrice}
                 onChangeText={setTargetPrice}
                 placeholder="e.g. 150"
@@ -224,6 +313,12 @@ export default function CalculatorScreen({ navigation }: Props) {
             <View style={styles.toggleContainer}>
                 <Text style={{ color: 'white' }}>Buy at Ask</Text>
                 <Switch value={useAskPrice} onValueChange={setUseAskPrice} color="#00ff88" />
+                <Text style={{ color: 'white' }}>Strategy: {mode === 'roi' ? 'High ROI (Aggressive)' : 'High Profit (Strategic)'}</Text>
+                <Switch
+                    value={mode === 'roi'}
+                    onValueChange={(val) => setMode(val ? 'roi' : 'profit')}
+                    color="#00ff88"
+                />
             </View>
 
             {/* Disclaimer Card */}
@@ -286,15 +381,16 @@ export default function CalculatorScreen({ navigation }: Props) {
             )}
 
             {!marketClosedOrNoData && noProfitableOptions && (
-              <Card style={styles.warningBox}>
+            <Card style={styles.warningBox}>
                 <Card.Content style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <MaterialIcons name="warning" size={24} color="#ffaa00" style={{ marginRight: 8 }} />
-                  <Text style={{ color: '#ffaa00', fontSize: 16 }}>
-                    No profitable options found. Try increasing your budget or adjusting your price/date.
-                  </Text>
+                <MaterialIcons name="warning" size={24} color="#ffaa00" style={{ marginRight: 8 }} />
+                <Text style={{ color: '#ffaa00', fontSize: 16 }}>
+                    {customWarningMessage || "No profitable options found. Try increasing your budget or adjusting your price/date."}
+                </Text>
                 </Card.Content>
-              </Card>
+            </Card>
             )}
+
 
             {bestOptions.length > 0 && (
               <View>
@@ -314,7 +410,7 @@ export default function CalculatorScreen({ navigation }: Props) {
                       <Text style={styles.resultText}>Strike: {opt.strike}</Text>
                       <Text style={styles.resultText}>Buy Price: {opt.buy_price.toFixed(2)}</Text>
                       <Text style={styles.resultText}>Contracts: {opt.contracts_affordable}</Text>
-                      <Text style={styles.resultText}>Total Cost: €{opt.total_cost.toFixed(2)}</Text>
+                      <Text style={styles.resultText}>Total Cost: ${opt.total_cost.toFixed(2)}</Text>
                       <Text style={styles.resultText}>Expiry: {opt.expiration.split('T')[0]}</Text>
                       <Text style={styles.resultText}>Est. Return: {(opt.predicted_return * 100).toFixed(1)}%</Text>
                       {opt.badges && renderBadges(opt.badges)}
