@@ -146,7 +146,7 @@ export default function CalculatorScreen({ navigation }: Props) {
 
   const fetchCurrentPrice = async (symbol: string) => {
     try {
-      const response = await fetch(`http://localhost:8000/current-price?ticker=${symbol}`);
+      const response = await fetch(`https://option-ranker-backend-production.up.railway.app/current-price?ticker=${symbol}`);
       const json = await response.json();
       if (json?.price) {
         setCurrentPrice(json.price);
