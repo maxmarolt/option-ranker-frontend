@@ -297,28 +297,63 @@ export default function CalculatorScreen({ navigation }: Props) {
             />
 
             {Platform.OS === 'web' ? (
+              <View style={{ marginBottom: 20 }}>
+                <Text style={{ color: '#ccc', marginBottom: 6, fontSize: 16 }}>
+                  Select Target Date:
+                </Text>
                 <input
-                type="date"
-                value={targetDate.toISOString().split('T')[0]}
-                onChange={(e) => {
+                  type="date"
+                  value={targetDate.toISOString().split('T')[0]}
+                  onChange={(e) => {
                     const val = e.target.value;
                     if (!isNaN(Date.parse(val))) {
-                    setTargetDate(new Date(val));
+                      setTargetDate(new Date(val));
                     }
-                }}
-                style={{
+                  }}
+                  style={{
                     padding: 12,
-                    marginBottom: 20,
                     backgroundColor: '#000',
-                    color: '#00ff88',
+                    color: '#ccc',
                     border: '1px solid #00ff88',
                     borderRadius: 8,
                     fontSize: 16,
                     fontFamily: 'sans-serif',
-                    marginTop: 10,
-                }}
+                    cursor: 'pointer',
+                  }}
                 />
-            ) : null}
+              </View>
+            ) : (
+              <>
+                <TextInput
+                  label="Target Date"
+                  value={targetDate.toISOString().split('T')[0]}
+                  mode="outlined"
+                  editable={false}
+                  onPressIn={() => setShowPicker(true)}
+                  style={styles.input}
+                  theme={{ colors: theme.colors }}
+                  contentStyle={{ color: '#00ff88' }}
+                  right={<TextInput.Icon icon="calendar" color="#00ff88" />}
+                />
+
+                {showPicker && (
+                  <DateTimePicker
+                    value={targetDate}
+                    mode="date"
+                    display="default"
+                    onChange={(_, selectedDate) => {
+                      if (selectedDate) setTargetDate(selectedDate);
+                      setShowPicker(false);
+                    }}
+                  />
+                )}
+              </>
+            )}
+
+
+
+
+
 
             <View style={styles.toggleContainer}>
                 <Text style={{ color: 'white' }}>Buy at Ask</Text>
