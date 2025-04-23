@@ -25,6 +25,8 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { SafeAreaView, StatusBar } from 'react-native';
 import { IconButton } from 'react-native-paper';
 import { TouchableOpacity } from 'react-native';
+import { KeyboardAvoidingView,} from 'react-native';
+
 
 
 
@@ -65,6 +67,7 @@ export default function CalculatorScreen({ navigation }: Props) {
   const [mode, setMode] = useState<'roi' | 'profit'>('roi');
   const [customWarningMessage, setCustomWarningMessage] = useState<string | null>(null);
   const [currentPrice, setCurrentPrice] = useState<number | null>(null);
+  const [isPriceLoading, setIsPriceLoading] = useState(false);
   const { width } = useWindowDimensions();
   const isWideScreen = Platform.OS === 'web' && width > 768;
 
@@ -145,6 +148,7 @@ export default function CalculatorScreen({ navigation }: Props) {
   };
 
   const fetchCurrentPrice = async (symbol: string) => {
+    setIsPriceLoading(true);
     try {
       const response = await fetch(`https://option-ranker-backend-production.up.railway.app/current-price?ticker=${symbol}`);
       const json = await response.json();
@@ -156,8 +160,10 @@ export default function CalculatorScreen({ navigation }: Props) {
     } catch (err) {
       console.error("Error fetching price from backend:", err);
       setCurrentPrice(null);
+    } finally {
+      setIsPriceLoading(false);
     }
-  };
+  };  
   
 
   const renderBadges = (badges: any[]) => (
@@ -176,19 +182,27 @@ export default function CalculatorScreen({ navigation }: Props) {
       <SafeAreaView style={{ flex: 1, backgroundColor: '#000' }}>
         <StatusBar barStyle="light-content" backgroundColor="#000" />
   
-        <ScrollView style={{ flex: 1, backgroundColor: '#000' }} contentContainerStyle={{ flexGrow: 1 }}>
-        <View style={{ paddingLeft: 8, paddingTop: 8 }}>
-            <Button
-                mode="text"
-                onPress={() => navigation.goBack()}
-                textColor="#00ff88"
-                labelStyle={{ fontSize: 16 }}
-                icon="arrow-left"
-                contentStyle={{ flexDirection: 'row-reverse' }} // arrow on left
-            >
-                Back
-            </Button>
-            </View>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={{ flex: 1 }}
+        >
+          <ScrollView
+            style={{ flex: 1, backgroundColor: '#000' }}
+            contentContainerStyle={{ flexGrow: 1 }}
+            keyboardShouldPersistTaps="handled"
+          >
+        <View style={{ position: 'absolute', top: 20, left: 10, zIndex: 10 }}>
+        <Button
+          mode="text"
+          onPress={() => navigation.goBack()}
+          textColor="#00ff88"
+          labelStyle={{ fontSize: 16 }}
+          icon="arrow-left"
+          contentStyle={{ flexDirection: 'row-reverse' }}
+        >
+          Back
+        </Button>
+      </View>
 
         <View style={[styles.splitContainer, { flexDirection: isWideScreen ? 'row' : 'column' }]}>
         <View style={[styles.inputSection, !isWideScreen && { marginLeft: 0, alignSelf: 'center' }]}>
@@ -199,60 +213,59 @@ export default function CalculatorScreen({ navigation }: Props) {
             marginBottom: 20,
         }}
         >
-        <View
-            style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                marginBottom: 20,
-            }}
-            >
-            <TextInput
-                label="Stock Ticker"
-                value={ticker}
-                onChangeText={(val) => {
-                setTicker(val);
-                setCurrentPrice(null);
-                }}
-                placeholder="e.g. NVDA"
-                mode="outlined"
-                style={[
-                styles.input,
-                {
-                    flex: 1,
-                    marginRight: 10,
-                    marginBottom: 3, // eliminate gap
-                },
-                ]}
-                autoCapitalize="characters"
-                theme={{ colors: theme.colors }}
-                contentStyle={{ color: '#00ff88' }}
-            />
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
+        <TextInput
+          label="Stock Ticker"
+          value={ticker}
+          onChangeText={(val) => {
+            setTicker(val);
+            setCurrentPrice(null);
+          }}
+          placeholder="e.g. NVDA"
+          mode="outlined"
+          style={{
+            flexGrow: 1,
+            minWidth: 120,
+            marginRight: 10,
+          }}
+          autoCapitalize="characters"
+          theme={{ colors: theme.colors }}
+          contentStyle={{ color: '#00ff88' }}
+        />
+        <Button
+        mode="outlined"
+        onPress={() => {
+          if (ticker.trim() !== '') {
+            fetchCurrentPrice(ticker.toUpperCase());
+          } else {
+            Alert.alert('Ticker Missing', 'Please enter a stock ticker first.');
+          }
+        }}
+        style={{
+          height: 56,
+          justifyContent: 'center',
+          borderRadius: 28,
+          marginTop: 4, // ← small visual alignment tweak
+        }}
+        contentStyle={{
+          height: 56,
+          paddingVertical: 0,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+        labelStyle={{ fontSize: 14, color: '#00ff88' }}
+        textColor="#00ff88"
+      >
+        {isPriceLoading
+          ? 'Loading...'
+          : currentPrice !== null
+            ? `Price ($): $${currentPrice.toFixed(2)}`
+            : 'Get Price'}
+      </Button>
 
-            <TouchableOpacity
-                onPress={() => {
-                if (ticker.trim() !== '') {
-                    fetchCurrentPrice(ticker.toUpperCase());
-                } else {
-                    Alert.alert('Ticker Missing', 'Please enter a stock ticker first.');
-                }
-                }}
-                style={{
-                height: 51,
-                paddingHorizontal: 12,
-                borderColor: '#00ff88',
-                borderWidth: 1,
-                borderRadius: 4,
-                justifyContent: 'center',
-                alignItems: 'center',
-                }}
-            >
-                <Text style={{ color: '#00ff88', fontSize: 14 }}>
-                {currentPrice !== null
-                    ? `Price ($): $${currentPrice.toFixed(2)}`
-                    : 'Get Price'}
-                </Text>
-            </TouchableOpacity>
-            </View>
+
+
+      </View>
 
 
         
@@ -419,6 +432,7 @@ export default function CalculatorScreen({ navigation }: Props) {
           </ScrollView>
         </View>
       </ScrollView>
+      </KeyboardAvoidingView>
       </SafeAreaView>
     </PaperProvider>
   );
