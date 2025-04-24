@@ -30,9 +30,11 @@ import { KeyboardAvoidingView,} from 'react-native';
 
 
 
+
 type RootStackParamList = {
   Calculator: undefined;
   Advanced: undefined;
+  MathBreakdown: { option: string; stats: string; mode: string; priceMode: string };
 };
 
 type Props = {
@@ -63,11 +65,11 @@ export default function CalculatorScreen({ navigation }: Props) {
   const [useAskPrice, setUseAskPrice] = useState(true);
   const [animValue] = useState(new Animated.Value(1));
   const [isLoading, setIsLoading] = useState(false);
-  const [disclaimerChecked, setDisclaimerChecked] = useState(false);
   const [mode, setMode] = useState<'roi' | 'profit'>('roi');
   const [customWarningMessage, setCustomWarningMessage] = useState<string | null>(null);
   const [currentPrice, setCurrentPrice] = useState<number | null>(null);
   const [isPriceLoading, setIsPriceLoading] = useState(false);
+  const [stats, setStats] = useState<any>(null);
   const { width } = useWindowDimensions();
   const isWideScreen = Platform.OS === 'web' && width > 768;
 
@@ -88,34 +90,41 @@ export default function CalculatorScreen({ navigation }: Props) {
 
   const calculate = async () => {
     animateButton();
-    if (!disclaimerChecked) {
-      Alert.alert("Disclaimer Required", "You must confirm that you've read the disclaimer before continuing.");
-      return;
-    }
     const budgetNum = parseFloat(budget);
     const targetPriceNum = parseFloat(targetPrice);
     if (!budgetNum || !targetPriceNum || !targetDate || !ticker) {
       Alert.alert("Missing Input", "Please fill all fields");
       return;
     }
-    const requestBody = {
+    const payload = {
       ticker,
       target_price: targetPriceNum,
       target_date: targetDate.toISOString().split('T')[0],
       decision_date: new Date().toISOString().split('T')[0],
       budget: budgetNum,
       price_mode: useAskPrice ? 'ask' : 'mid',
+      mode: mode  // ✅ Include this so backend knows whether it's ROI or Profit
     };
+    
     setIsLoading(true);
     setMarketClosedOrNoData(false);
     try {
-        const response = await fetch(`https://option-ranker-backend-production.up.railway.app/predict-options?mode=${mode}`, {
-
-
+      const response = await fetch(`https://option-ranker-backend-production.up.railway.app/predict-options?mode=${mode}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody),
-      });
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ticker,
+          target_price: targetPriceNum,
+          target_date: targetDate.toISOString().split('T')[0],
+          decision_date: new Date().toISOString().split('T')[0],
+          budget: budgetNum,
+          price_mode: useAskPrice ? 'ask' : 'mid'
+          // ⛔ no need to include 'mode' here in body anymore
+        }),
+      });      
+      
       const result = await response.json();
       if (result.market_closed_or_no_data) {
         setMarketClosedOrNoData(true);
@@ -131,6 +140,7 @@ export default function CalculatorScreen({ navigation }: Props) {
       } else {
         setNoProfitableOptions(false);
         setBestOptions(result.results || []);
+        setStats(result.stats || null);
         setCustomWarningMessage(null);
       }      
       
@@ -150,7 +160,7 @@ export default function CalculatorScreen({ navigation }: Props) {
   const fetchCurrentPrice = async (symbol: string) => {
     setIsPriceLoading(true);
     try {
-      const response = await fetch(`https://option-ranker-backend-production.up.railway.app/current-price?ticker=${symbol}`);
+      const response = await fetch(`https://option-ranker-backend-production.up.railway.app/current-price?ticker=${symbol}`)
       const json = await response.json();
       if (json?.price) {
         setCurrentPrice(json.price);
@@ -360,32 +370,12 @@ export default function CalculatorScreen({ navigation }: Props) {
                 <Switch value={useAskPrice} onValueChange={setUseAskPrice} color="#00ff88" />
                 <Text style={{ color: 'white' }}>Strategy: {mode === 'roi' ? 'High ROI (Aggressive)' : 'High Profit (Strategic)'}</Text>
                 <Switch
-                    value={mode === 'roi'}
-                    onValueChange={(val) => setMode(val ? 'roi' : 'profit')}
-                    color="#00ff88"
-                />
-            </View>
+                value={mode === 'roi'}
+                onValueChange={() => setMode(mode === 'roi' ? 'profit' : 'roi')}
+                color="#00ff88"
+              />
 
-            {/* Disclaimer Card */}
-            <Card style={styles.warningBox}>
-                <Card.Content>
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                    <MaterialIcons name="warning" size={24} color="#ffaa00" style={{ marginRight: 8 }} />
-                    <Text style={{ color: '#ffaa00', fontSize: 18, fontWeight: 'bold' }}>Disclaimer</Text>
-                </View>
-                <Text style={{ color: '#ccc', marginBottom: 10 }}>
-                This tool is for educational and informational purposes only. It does not constitute financial advice, investment recommendations, or a guarantee of performance. The underlying model is experimental and currently in testing. Options data is sourced from Yahoo Finance and may be delayed by at least 15 minutes, which limits real-time accuracy. Model performance may drop significantly for short-term options or highly volatile stocks. Always do your own research and consult a licensed financial advisor before making investment decisions.    Calculator only works during market open hours + delay.
-                </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Checkbox.Android
-                    status={disclaimerChecked ? 'checked' : 'unchecked'}
-                    onPress={() => setDisclaimerChecked(!disclaimerChecked)}
-                    color="#00ff88"
-                    />
-                    <Text style={{ color: 'white' }}>I have read and understand the disclaimer.</Text>
-                </View>
-                </Card.Content>
-            </Card>
+            </View>
 
             {/* ✅ One calculate button only — here at the end */}
             <Animated.View style={{ transform: [{ scale: animValue }] }}>
@@ -458,7 +448,30 @@ export default function CalculatorScreen({ navigation }: Props) {
                       <Text style={styles.resultText}>Total Cost: ${opt.total_cost.toFixed(2)}</Text>
                       <Text style={styles.resultText}>Expiry: {opt.expiration.split('T')[0]}</Text>
                       <Text style={styles.resultText}>Est. Return: {(opt.predicted_return * 100).toFixed(1)}%</Text>
+                      {opt.target_too_far && (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+                          <MaterialIcons name="error-outline" size={16} color="#ff4444" />
+                          <Text style={{ marginLeft: 4, fontSize: 12, color: '#ff4444' }}>
+                            High risk — prediction exceeds typical implied move range
+                          </Text>
+                        </View>
+                      )}
                       {opt.badges && renderBadges(opt.badges)}
+
+                      <Button
+                        mode="text"
+                        onPress={() => navigation.navigate('MathBreakdown', {
+                          option: JSON.stringify(opt),
+                          stats: JSON.stringify(stats),
+                          mode: mode,
+                          priceMode: useAskPrice ? 'ask' : 'mid'
+                        })}
+                        textColor="#00ff88"
+                        style={{ marginTop: 12 }}
+                      >
+                        🧮 I want the math
+                      </Button>
+
                     </Card.Content>
                   </Card>
                 ))}

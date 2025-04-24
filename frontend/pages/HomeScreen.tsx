@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ScrollView, View, StyleSheet, Image, Dimensions } from 'react-native';
-import { Button } from 'react-native-paper';
+import { Button, Dialog, Portal, Text } from 'react-native-paper';
 import { StackNavigationProp } from '@react-navigation/stack';
 
 type RootStackParamList = {
   Home: undefined;
   Calculator: undefined;
   Advanced: undefined;
+  About: undefined;
 };
 
 type Props = {
@@ -14,6 +15,7 @@ type Props = {
 };
 
 export default function HomeScreen({ navigation }: Props) {
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
   return (
     <ScrollView contentContainerStyle={styles.scrollContent} style={styles.container}>
       <Image
@@ -26,12 +28,22 @@ export default function HomeScreen({ navigation }: Props) {
 
       <Button
         mode="outlined"
-        onPress={() => navigation.navigate('Calculator')}
+        onPress={() => navigation.navigate('About')}
+        style={styles.button}
+        textColor="#00ff88"
+      >
+        New to Icarus?
+      </Button>
+
+      <Button
+        mode="outlined"
+        onPress={() => setShowDisclaimer(true)}
         style={styles.button}
         textColor="#00ff88"
       >
         Use Calculator
       </Button>
+
 
       <Button
         mode="outlined"
@@ -41,6 +53,24 @@ export default function HomeScreen({ navigation }: Props) {
       >
         Launch Advanced Tools
       </Button>
+      <Portal>
+      <Dialog visible={showDisclaimer} onDismiss={() => setShowDisclaimer(false)}>
+        <Dialog.Title>Disclaimer</Dialog.Title>
+        <Dialog.Content>
+          <Text>
+          This tool is for educational and informational purposes only. It does not constitute financial advice, investment recommendations, or a guarantee of performance. The underlying model is experimental and currently in testing. Options data is sourced from Yahoo Finance and may be delayed by at least 15 minutes, which limits real-time accuracy. Calculator only works during market open hours + delay. Continue only if you agree.
+          </Text>
+        </Dialog.Content>
+        <Dialog.Actions>
+          <Button onPress={() => setShowDisclaimer(false)}>Cancel</Button>
+          <Button onPress={() => {
+            setShowDisclaimer(false);
+            navigation.navigate('Calculator');
+          }}>I Understand</Button>
+        </Dialog.Actions>
+      </Dialog>
+    </Portal>
+
     </ScrollView>
   );
 }
