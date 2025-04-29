@@ -26,6 +26,10 @@ import { SafeAreaView, StatusBar } from 'react-native';
 import { IconButton } from 'react-native-paper';
 import { TouchableOpacity } from 'react-native';
 import { KeyboardAvoidingView,} from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
+import { logBetaEvent } from '../utils/logger';
+
 
 
 
@@ -53,6 +57,12 @@ const theme = {
 };
 
 export default function CalculatorScreen({ navigation }: Props) {
+  useFocusEffect(
+    useCallback(() => {
+      logBetaEvent('Tab Opened', { tab: 'Calculator' });
+    }, [])
+  );
+  
   const [ticker, setTicker] = useState('');
   const [budget, setBudget] = useState('');
   const [targetPrice, setTargetPrice] = useState('');
@@ -96,6 +106,14 @@ export default function CalculatorScreen({ navigation }: Props) {
       Alert.alert("Missing Input", "Please fill all fields");
       return;
     }
+    // Log the calculator submission event
+    logBetaEvent('Calculator Submitted', {
+      ticker,
+      budget: budgetNum,
+      targetPrice: targetPriceNum,
+      expiryDate: targetDate.toISOString().split('T')[0]
+    });
+
     const payload = {
       ticker,
       target_price: targetPriceNum,

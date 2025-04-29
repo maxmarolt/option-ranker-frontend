@@ -3,6 +3,10 @@ import { View, StyleSheet } from 'react-native';
 import { Text, Button, TextInput } from 'react-native-paper';
 import VolSurfaceChart from '../components/charts/VolSurfaceChart';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
+import { logBetaEvent } from '../utils/logger';
+
 
 type RootStackParamList = {
   Calculator: undefined;
@@ -14,6 +18,12 @@ type Props = {
 };
 
 export default function AdvancedScreen({ navigation }: Props) {
+  useFocusEffect(
+    useCallback(() => {
+      logBetaEvent('Tab Opened', { tab: 'Advanced Tools' });
+    }, [])
+  );
+  
   const [ticker, setTicker] = useState('');
   const [selectedChart, setSelectedChart] = useState<string | null>(null);
 

@@ -1,9 +1,18 @@
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { useRoute } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
+import { logBetaEvent } from '../utils/logger';
 
 
 export default function MathBreakdown() {
+  useFocusEffect(
+    useCallback(() => {
+      logBetaEvent('Tab Opened', { tab: 'Math Breakdown' });
+    }, [])
+  );
+  
     const route = useRoute();
     const { option, stats, mode, priceMode } = route.params as {
     option: string;

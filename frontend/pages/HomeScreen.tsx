@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { ScrollView, View, StyleSheet, Image, Dimensions } from 'react-native';
 import { Button, Dialog, Portal, Text } from 'react-native-paper';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
+import { logBetaEvent } from '../utils/logger';
+
 
 type RootStackParamList = {
   Home: undefined;
@@ -15,6 +19,12 @@ type Props = {
 };
 
 export default function HomeScreen({ navigation }: Props) {
+  useFocusEffect(
+    useCallback(() => {
+      logBetaEvent('Tab Opened', { tab: 'Home' });
+    }, [])
+  );
+  
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   return (
     <ScrollView contentContainerStyle={styles.scrollContent} style={styles.container}>

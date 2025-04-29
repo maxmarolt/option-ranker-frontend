@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
 import { ScrollView, Text, StyleSheet, View, Pressable } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
+import { logBetaEvent } from '../utils/logger';
+
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => {
   const [expanded, setExpanded] = useState(false);
@@ -15,6 +19,12 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
 };
 
 export default function AboutScreen() {
+  useFocusEffect(
+    useCallback(() => {
+      logBetaEvent('Tab Opened', { tab: 'About Icarus' });
+    }, [])
+  );
+  
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Section title="🚀 Welcome to Icarus">
