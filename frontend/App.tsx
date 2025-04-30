@@ -8,6 +8,8 @@ import AdvancedScreen from './pages/AdvancedScreen';
 import AboutScreen from './pages/AboutScreen';
 import MathBreakdown from './pages/MathBreakdown';
 import { logBetaEvent } from './utils/logger'; // <-- ADDED
+import QuizScreen from './pages/QuizScreen';
+
 
 const Stack = createStackNavigator();
 
@@ -32,6 +34,7 @@ export default function App() {
           <Stack.Screen name="Advanced" component={AdvancedScreen} options={{ headerShown: false }} />
           <Stack.Screen name="About" component={AboutScreen} />
           <Stack.Screen name="MathBreakdown" component={MathBreakdown} />
+          <Stack.Screen name="Quiz" component={QuizScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </PaperProvider>
