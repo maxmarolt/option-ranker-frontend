@@ -1,8 +1,17 @@
 import React from 'react';
 import { ScrollView, View, StyleSheet, Text } from 'react-native';
 import Quiz from '../components/Quiz_test';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
+import { logBetaEvent } from '../utils/logger';
+
 
 export default function QuizScreen() {
+    useFocusEffect(
+        useCallback(() => {
+          logBetaEvent('Tab Opened', { tab: 'Quiz' });
+        }, [])
+      );
   return (
     <ScrollView contentContainerStyle={styles.scrollContent} style={styles.container}>
       <Text style={styles.title}>Options Quiz</Text>
