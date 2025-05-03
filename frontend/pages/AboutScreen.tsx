@@ -1,14 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { ScrollView, Text, StyleSheet, View, Pressable } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { useCallback } from 'react';
 import { logBetaEvent } from '../utils/logger';
 import { MaterialIcons } from '@expo/vector-icons';
 import type { IconProps } from '@expo/vector-icons/build/createIconSet';
+import { Button } from 'react-native-paper';
+import { StackNavigationProp } from '@react-navigation/stack';
+
+type RootStackParamList = {
+  Calculator: undefined;
+  About: undefined;
+};
+
+type Props = {
+  navigation: StackNavigationProp<RootStackParamList, 'About'>;
+};
 
 type MaterialIconName = IconProps<any>['name'];
 
-const Section = ({ title, icon, children }: { title: string; icon: MaterialIconName; children: React.ReactNode }) => {
+const Section = ({
+  title,
+  icon,
+  children,
+}: {
+  title: string;
+  icon: MaterialIconName;
+  children: React.ReactNode;
+}) => {
   const [expanded, setExpanded] = useState(false);
   return (
     <View style={styles.section}>
@@ -24,7 +42,7 @@ const Section = ({ title, icon, children }: { title: string; icon: MaterialIconN
   );
 };
 
-export default function AboutScreen() {
+export default function AboutScreen({ navigation }: Props) {
   useFocusEffect(
     useCallback(() => {
       logBetaEvent('Tab Opened', { tab: 'About Icarus' });
@@ -33,16 +51,26 @@ export default function AboutScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      {/* Back Button */}
+      <View style={{ position: 'absolute', top: 20, left: 10, zIndex: 10 }}>
+        <Button
+          mode="text"
+          onPress={() => navigation.goBack()}
+          textColor="#00ff88"
+          labelStyle={{ fontSize: 16 }}
+          icon="arrow-left"
+          contentStyle={{ flexDirection: 'row-reverse' }}
+        >
+          Back
+        </Button>
+      </View>
+
       <Section title="Welcome to Icarus" icon="flight">
         <Text style={styles.paragraph}>
           In the myth, Icarus and his father Daedalus built wings to escape from Crete. They used feathers and wax. As they took flight, Daedalus warned his son not to fly too high or too low. But Icarus soared upward, toward the sun. The wax melted, and he fell into the sea.
         </Text>
-        <Text style={styles.paragraph}>
-          Most people say the lesson is simple: don’t be too ambitious.
-        </Text>
-        <Text style={styles.paragraph}>
-          We see it differently.
-        </Text>
+        <Text style={styles.paragraph}>Most people say the lesson is simple: don’t be too ambitious.</Text>
+        <Text style={styles.paragraph}>We see it differently.</Text>
         <Text style={styles.paragraph}>
           Icarus didn’t fall because he dreamed too big. He fell because he used the wrong materials. The idea wasn’t the problem — the tools were.
         </Text>
@@ -50,7 +78,6 @@ export default function AboutScreen() {
           We’ve been the retail traders flying blind, watching the pros eat while we get fed latency, noise, and guesswork. We didn’t build Icarus to play it safe — we built it to flip the script. Retail doesn’t need a handout. It needs real tools, built by people who actually trade this stuff. Tools that speak your language, reflect your logic, and give you a fair shot at playing the game right.
         </Text>
       </Section>
-
 
       <Section title="What this App Does Not Do" icon="block">
         <Text style={styles.bullet}>- Give financial advice</Text>
@@ -77,19 +104,15 @@ export default function AboutScreen() {
         <Text style={styles.paragraph}>
           This is a simplified summary of the core model. During beta testing, the full implementation details remain proprietary. Upon full public release, we are committed to complete transparency around how the model works and ranks contracts.
         </Text>
-
         <Text style={styles.paragraph}>
           The core of this app is a scenario-based option ranker. It uses a twist on the classic Black-Scholes formula (the foundation of modern options pricing) to help you find the most efficient option strategy for a specific market view.
         </Text>
-
         <Text style={styles.paragraph}>
           Normally, Black-Scholes assumes the future is unknown and prices options based on current conditions. But traders often have a specific belief. For example, “this stock will hit $120 by next Friday.” The Icarus model takes that belief and makes it actionable.
         </Text>
-
         <Text style={styles.paragraph}>
           Instead of using today’s price (S₀) in the formula, the model substitutes your target price (S_target). This turns Black-Scholes into a scenario evaluator. It asks: “If you’re right, what would this option be worth on that date?”
         </Text>
-
         <Text style={styles.paragraph}>
           Mathematically, the substitution looks like this:
         </Text>
@@ -99,28 +122,22 @@ export default function AboutScreen() {
         <Text style={styles.paragraph}>
           where d₁̂ and d₂̂ are based on your forecast price and expiration.
         </Text>
-
         <Text style={styles.paragraph}>
           The model scans every available call or put option, filters out bad data and contracts that don't match your timeframe or budget, and calculates how each would perform in your scenario. It then ranks them by either expected return or profit, depending on your mode.
         </Text>
-
         <Text style={styles.paragraph}>
           In “ROI” mode, it prioritizes percent gain. In “Profit” mode, it focuses on total dollar payoff. Either way, it picks the contract that gives you the most efficient exposure to your view.
         </Text>
-
         <Text style={styles.paragraph}>
           This isn't a forecast engine. It doesn't try to predict the market. It assumes you're right, and helps you find the contract that best rewards that accuracy.
         </Text>
-
         <Text style={styles.paragraph}>
           In extensive backtests using real NVDA data from early 2024, the model outperformed a random contract picker in <Text style={styles.bold}>92.8% of 1000 trials</Text>. It achieved a <Text style={styles.bold}>mean return of +14.43%</Text> versus just <Text style={styles.bold}>+3.17%</Text> for random picks. A t-test confirmed statistical significance with a p-value near zero, and Cohen’s d showed a very large effect size of 1.19.
         </Text>
-
         <Text style={styles.paragraph}>
           In short: the calculator transforms your belief into a ranked list of the best ways to express it — mathematically, transparently, and without the noise of guesswork or blind browsing.
         </Text>
       </Section>
-
 
       <Section title="Our Mission" icon="flag">
         <Text style={styles.paragraph}>
@@ -131,8 +148,6 @@ export default function AboutScreen() {
         </Text>
         <Text style={styles.boldCenter}>No more wax wings.</Text>
       </Section>
-
-      
     </ScrollView>
   );
 }
@@ -144,6 +159,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
+    paddingTop: 70,
   },
   section: {
     marginBottom: 20,

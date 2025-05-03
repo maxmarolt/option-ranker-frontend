@@ -32,9 +32,9 @@ export default function App() {
           <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Calculator" component={CalculatorScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Advanced" component={AdvancedScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="About" component={AboutScreen} />
+          <Stack.Screen name="About" component={AboutScreen} options={{ headerShown: false }}/>
           <Stack.Screen name="MathBreakdown" component={MathBreakdown} />
-          <Stack.Screen name="Quiz" component={QuizScreen} />
+          <Stack.Screen name="Quiz" component={QuizScreen} options={{ headerShown: false }}/>
         </Stack.Navigator>
       </NavigationContainer>
     </PaperProvider>

@@ -155,12 +155,43 @@ export default function CalculatorScreen({ navigation }: Props) {
         setNoProfitableOptions(true);
         setBestOptions([]);
         setCustomWarningMessage(result.message || null);
+        
+        // log failed result
+        logBetaEvent('Calculator Submitted', {
+          ticker,
+          budget: budgetNum,
+          targetPrice: targetPriceNum,
+          expiryDate: targetDate.toISOString().split('T')[0],
+          result: 'No profitable options'
+        });
+        
       } else {
         setNoProfitableOptions(false);
         setBestOptions(result.results || []);
         setStats(result.stats || null);
         setCustomWarningMessage(null);
-      }      
+      
+        // ✅ log successful result — log only the top-ranked option
+        const topOption = result.results[0];
+      
+        logBetaEvent('Calculator Submitted', {
+          ticker,
+          budget: budgetNum,
+          targetPrice: targetPriceNum,
+          expiryDate: targetDate.toISOString().split('T')[0],
+          result: {
+            type: topOption.option_type === 'C' ? 'Call' : 'Put',
+            strike: topOption.strike,
+            buyPrice: topOption.buy_price,
+            contracts: topOption.contracts_affordable,
+            totalCost: topOption.total_cost,
+            expiration: topOption.expiration,
+            predictedReturn: topOption.predicted_return,
+            predictedProfit: topOption.predicted_profit
+          }
+        });
+      }
+         
       
       // Show IV warning if applicable
       if (result.iv_warning && result.iv_message) {
@@ -195,15 +226,23 @@ export default function CalculatorScreen({ navigation }: Props) {
   
 
   const renderBadges = (badges: any[]) => (
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 10 }}>
+    <View style={{ marginTop: 10, flexDirection: 'column' }}>
       {badges.map((badge, index) => (
-        <View key={index} style={{ flexDirection: 'row', alignItems: 'center', marginRight: 10, marginBottom: 6 }}>
+        <View
+          key={index}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginBottom: 6,
+          }}
+        >
           <MaterialIcons name={badge.icon} size={16} color={badge.color || "#00ff88"} />
           <Text style={{ marginLeft: 4, fontSize: 12, color: '#ccc' }}>{badge.label}</Text>
         </View>
       ))}
     </View>
   );
+  
 
   return (
     <PaperProvider theme={theme}>
