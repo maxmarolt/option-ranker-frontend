@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { ScrollView, View, StyleSheet, Image } from 'react-native';
-import { Button, Dialog, Portal, Text } from 'react-native-paper';
+import { Button, Dialog, Portal, Text, TextInput } from 'react-native-paper';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useFocusEffect } from '@react-navigation/native';
-import { useCallback } from 'react';
 import { logBetaEvent } from '../utils/logger';
 import { MaterialIcons } from '@expo/vector-icons';
 
@@ -21,6 +20,11 @@ type Props = {
 
 function getMarketStatus(): { status: string; color: string; icon: string } {
   const nowUTC = new Date();
+  const day = nowUTC.getUTCDay();
+  if (day === 0 || day === 6) {
+    return { status: 'Market Closed (Weekend)', color: 'red', icon: 'cancel' };
+  }
+
   const amsterdamTime = new Intl.DateTimeFormat('en-GB', {
     hour: '2-digit',
     minute: '2-digit',
@@ -42,6 +46,7 @@ function getMarketStatus(): { status: string; color: string; icon: string } {
   }
 }
 
+
 export default function HomeScreen({ navigation }: Props) {
   useFocusEffect(
     useCallback(() => {
@@ -50,11 +55,26 @@ export default function HomeScreen({ navigation }: Props) {
   );
 
   const [showDisclaimer, setShowDisclaimer] = useState(false);
+  const [feedbackVisible, setFeedbackVisible] = useState(false);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [userEmail, setUserEmail] = useState('');
+
   const market = getMarketStatus();
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContent} style={styles.container}>
-      <View style={[styles.marketStatusBox, { borderColor: market.color }]}>
+      <View style={{ position: 'absolute', top: 20, right: 20, zIndex: 10 }}>
+        <Button
+          mode="text"
+          icon="feedback"
+          textColor="#00ff88"
+          onPress={() => setFeedbackVisible(true)}
+        >
+          Feedback
+        </Button>
+      </View>
+
+      <View style={[styles.marketStatusBox, { borderColor: market.color }]}> 
         <MaterialIcons name={market.icon as any} size={20} color={market.color} style={{ marginRight: 8 }} />
         <View>
           <Text style={[styles.marketStatusMain, { color: market.color }]}>
@@ -67,7 +87,6 @@ export default function HomeScreen({ navigation }: Props) {
           )}
         </View>
       </View>
-
 
       <Image
         source={require('../assets/images/Logo2_text.png')}
@@ -120,7 +139,7 @@ export default function HomeScreen({ navigation }: Props) {
           <Dialog.Title>Disclaimer</Dialog.Title>
           <Dialog.Content>
             <Text>
-              This tool is for educational and informational purposes only. It does not constitute financial advice, investment recommendations, or a guarantee of performance. The underlying model is experimental and currently in testing. Options data is sourced from Yahoo Finance and may be delayed by at least 15 minutes, which limits real-time accuracy. Calculator only works during market open hours + delay. Continue only if you agree.
+              This tool is for educational and informational purposes only. It does not constitute financial advice, investment recommendations, or a guarantee of performance. The underlying model is experimental and currently in testing. Options data is sourced from Yahoo Finance and is delayed by 30min, which limits real-time accuracy. Calculator only works during market open hours + delay. Continue only if you agree.
             </Text>
           </Dialog.Content>
           <Dialog.Actions>
@@ -133,6 +152,19 @@ export default function HomeScreen({ navigation }: Props) {
             >
               I Understand
             </Button>
+          </Dialog.Actions>
+        </Dialog>
+
+        <Dialog visible={feedbackVisible} onDismiss={() => setFeedbackVisible(false)}>
+          <Dialog.Title>Submit Feedback</Dialog.Title>
+          <Dialog.Content>
+            <Text>We’d love to hear your thoughts:</Text>
+            <TextInput label="Your feedback" multiline value={feedbackText} onChangeText={setFeedbackText} mode="outlined" style={{ marginTop: 10 }} />
+            <TextInput label="Can we follow up? Leave your email (optional)" value={userEmail} onChangeText={setUserEmail} mode="outlined" keyboardType="email-address" autoCapitalize="none" style={{ marginTop: 10 }} />
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setFeedbackVisible(false)}>Cancel</Button>
+            <Button onPress={() => { logBetaEvent('User Feedback Submitted', { feedback: feedbackText, email: userEmail }); setFeedbackVisible(false); setFeedbackText(''); setUserEmail(''); }}>Submit</Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>
