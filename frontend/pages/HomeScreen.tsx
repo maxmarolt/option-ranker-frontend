@@ -63,16 +63,18 @@ export default function HomeScreen({ navigation }: Props) {
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContent} style={styles.container}>
-      <View style={{ position: 'absolute', top: 20, right: 20, zIndex: 10 }}>
+      <View style={{ position: 'absolute', top: 20, right: 10, zIndex: 10 }}>
         <Button
           mode="text"
           icon="feedback"
           textColor="#00ff88"
           onPress={() => setFeedbackVisible(true)}
+          labelStyle={{ fontSize: 12 }}
         >
-          Feedback
+          Feedback / Report Bug
         </Button>
       </View>
+
 
       <View style={[styles.marketStatusBox, { borderColor: market.color }]}> 
         <MaterialIcons name={market.icon as any} size={20} color={market.color} style={{ marginRight: 8 }} />
