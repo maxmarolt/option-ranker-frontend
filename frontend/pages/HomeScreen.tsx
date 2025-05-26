@@ -76,19 +76,22 @@ export default function HomeScreen({ navigation }: Props) {
       </View>
 
 
-      <View style={[styles.marketStatusBox, { borderColor: market.color }]}> 
-        <MaterialIcons name={market.icon as any} size={20} color={market.color} style={{ marginRight: 8 }} />
-        <View>
-          <Text style={[styles.marketStatusMain, { color: market.color }]}>
-            {market.status.includes('Open') ? 'Market Open' : 'Market Closed'}
-          </Text>
-          {market.status.includes('Open') && (
-            <Text style={styles.marketStatusSub}>
-              {market.status.includes('Receiving') ? 'Receiving Options Data' : 'No Options Data'}
+      <View style={{ marginTop: 60, alignItems: 'center' }}>
+        <View style={[styles.marketStatusBox, { borderColor: market.color }]}>
+          <MaterialIcons name={market.icon as any} size={20} color={market.color} style={{ marginRight: 8 }} />
+          <View>
+            <Text style={[styles.marketStatusMain, { color: market.color }]}>
+              {market.status.includes('Open') ? 'Market Open' : 'Market Closed'}
             </Text>
-          )}
+            {market.status.includes('Open') && (
+              <Text style={styles.marketStatusSub}>
+                {market.status.includes('Receiving') ? 'Receiving Options Data' : 'No Options Data'}
+              </Text>
+            )}
+          </View>
         </View>
       </View>
+
 
       <Image
         source={require('../assets/images/Logo2_text.png')}
